@@ -1,0 +1,1 @@
+const f=['./','index.html','icon.jpg','manifest.json'];self.addEventListener('install',e=>e.waitUntil(caches.open('u1').then(c=>c.addAll(f))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));

@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0708"><link rel="manifest" href="manifest.json"><title>UNSTRUNG</title>
+<style>html,body{margin:0;height:100%;background:#0b0708;overflow:hidden;touch-action:none}
+canvas{display:block;width:100vw;height:100vh}
+.b{position:fixed;bottom:16px;width:64px;height:64px;border-radius:50%;background:#ffffff18;border:2px solid #a3283c;color:#e8d9c0;font:26px Georgia;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}</style></head><body>
+<canvas id=c></canvas><div class=b id=L style=left:16px>◀</div><div class=b id=R style=left:96px>▶</div><div class=b id=A style=right:96px>✦</div><div class=b id=J style=right:16px>▲</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d'),W=640,H=360,WORLD=4800,K={},img=new Image();img.src='icon.jpg';
+const KM={ArrowLeft:'L',ArrowRight:'R',ArrowUp:'J',' ':'J',e:'A',Enter:'A'};
+const G=[[0,1300],[1380,2600],[2680,3600],[3680,4800]],
+P=[[700,240,90],[900,190,90],[1100,240,90],[2000,230,100],[2200,180,100],[3000,240,100],[3200,190,100],[4000,230,100]],
+FR=[[850,150,"Souvenir : une main de bois qui n'était pas la mienne."],[1700,270,"Souvenir : une voix dit « Entre en scène ». Je n'ai pas choisi."],[2250,140,"Souvenir : j'ai déjà joué cette pièce, mille fois."],[3250,150,"Souvenir : un fil s'est rompu, et j'ai senti le vide."],[4050,190,"Souvenir : mon nom. Il n'est pas écrit dans le script."]],
+NP=[[400,["Te voilà debout… Ne regarde pas les fils.","Ici, chacun connaît son rôle."]],[1560,["Le Souffleur murmure dans l'ombre.","Écoute-le… ou souviens-toi."]],[2850,["Les spectateurs n'ont pas de visage.","Applaudis, ou romps le fil."]],[3880,["Le rideau ne s'ouvre sur aucune sortie.","Mais tes fils, eux, peuvent encore se couper."]]],
+SC=[[1800,2100,2,"« Je suis le prince et je t'aime. »"],[3100,3400,4,"« Je resterai ici pour toujours. »"]];
+let st='title',px=80,py=300,vx=0,vy=0,gr=0,ph=0,face=1,got=[],dlg=null,t=0,cp=80,forced=null,end=0;
+['L','R','A','J'].forEach(i=>{const e=document.getElementById(i);
+['touchstart','mousedown'].forEach(n=>e.addEventListener(n,v=>{v.preventDefault();K[i]=1;if(i=='A')act()}));
+['touchend','touchcancel','mouseup','mouseleave'].forEach(n=>e.addEventListener(n,()=>K[i]=0))});
+onkeydown=e=>{const m=KM[e.key];if(m){K[m]=1;if(m=='A'&&!e.repeat)act()}};onkeyup=e=>{const m=KM[e.key];if(m)K[m]=0};
+C.addEventListener('pointerdown',()=>{if(st!='play')act()});
+function fit(){C.width=innerWidth;C.height=innerHeight}onresize=fit;fit();
+const ground=x=>G.some(g=>x>g[0]&&x<g[1]);
+function say(L){dlg={L,i:0,s:L[0],n:0}}
+function act(){
+ if(st=='title'){st='play';say(["Tu te lèves, au bout de tes fils. Autour de toi : un théâtre.","Qui es-tu ? Personne ne te l'a dit. Trouve ton essence."]);return}
+ if(st=='end'){location.reload();return}
+ if(dlg){if(dlg.n<dlg.s.length)dlg.n=dlg.s.length;else if(++dlg.i<dlg.L.length){dlg.s=dlg.L[dlg.i];dlg.n=0}else dlg=null;return}
+ const n=NP.find(a=>Math.abs(a[0]-px)<50);
+ if(n)say(n[1]);else if(px>4650){end=got.length==5?2:1;st='end'}}
+function upd(){t++;if(st!='play')return;
+ if(dlg)dlg.n=Math.min(dlg.s.length,dlg.n+.6);
+ let m=dlg?0:(K.R?1:0)-(K.L?1:0);
+ forced=SC.find(s=>px>s[0]&&px<s[1]&&got.length<s[2]);
+ if(forced&&!dlg)m=Math.max(m,.6);
+ vx=m*2.4;if(m)face=m>0?1:-1;ph+=Math.abs(vx)*.12;
+ if(K.J&&gr&&!dlg){vy=-8.6;gr=0}
+ vy+=.45;px=Math.max(10,Math.min(WORLD-10,px+vx));
+ const o=py;py+=vy;gr=0;
+ if(vy>=0){if(ground(px)&&o<=300&&py>=300){py=300;vy=0;gr=1;cp=px-40}
+ else for(const p of P)if(px>p[0]&&px<p[0]+p[2]&&o<=p[1]&&py>=p[1]){py=p[1];vy=0;gr=1}}
+ if(py>520){px=Math.max(80,cp);py=300;vy=0}
+ FR.forEach((f,i)=>{if(!got.includes(i)&&Math.abs(px-f[0])<26&&Math.abs(py-30-f[1])<40){got.push(i);say([f[2]])}})}
+function pup(x,y,f,w,n,c){
+ const s=Math.sin(w)*6,A=[[x,y-56],[x-14,y-26],[x+14,y-26],[x-3,y-18],[x+3,y-18]];
+ X.strokeStyle='#ffffff38';X.lineWidth=1;
+ A.slice(5-n).forEach((a,i)=>{X.beginPath();X.moveTo(a[0],a[1]);X.lineTo(a[0]+Math.sin(t/40+i)*5,-20);X.stroke()});
+ X.strokeStyle=c;X.lineWidth=3;X.beginPath();
+ X.moveTo(x-3,y-18);X.lineTo(x-3+s,y);X.moveTo(x+3,y-18);X.lineTo(x+3-s,y);
+ X.moveTo(x-7,y-36);X.lineTo(x-14,y-26+s/2);X.moveTo(x+7,y-36);X.lineTo(x+14,y-26-s/2);X.stroke();
+ X.fillStyle=c;X.fillRect(x-7,y-40,14,23);X.beginPath();X.arc(x,y-48,8,0,7);X.fill();
+ X.fillStyle='#a3283c';X.beginPath();X.moveTo(x,y-39);X.lineTo(x-f*18,y-30+Math.sin(t/12)*2);X.lineTo(x-f*16,y-38);X.fill();
+ X.fillStyle='#ffd9a0';X.fillRect(x+f*3-1,y-50,2,2)}
+function wrap(s,x,y,w,l){let r='';for(const d of s.split(' ')){const q=r+d+' ';if(X.measureText(q).width>w&&r){X.fillText(r,x,y);y+=l;r=d+' '}else r=q}X.fillText(r,x,y)}
+function world(){
+ const cx=Math.max(0,Math.min(WORLD-W,px-W/2));
+ let g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1c1316');g.addColorStop(1,'#060304');X.fillStyle=g;X.fillRect(0,0,W,H);
+ X.fillStyle='#110b0d';for(let i=0;i<16;i++)X.fillRect(i*300-cx*.35,120+i%3*18,150,180);
+ X.strokeStyle='#ffffff12';X.lineWidth=1;
+ for(let i=0;i<26;i++){const x=((i*131-cx*.6)%W+W)%W;X.beginPath();X.moveTo(x,0);X.lineTo(x+Math.sin(t/50+i)*4,60+i*9%140);X.stroke()}
+ X.save();X.translate(-cx,0);
+ g=X.createLinearGradient(0,0,0,300);g.addColorStop(0,'#ffe2b03a');g.addColorStop(1,'#ffe2b004');X.fillStyle=g;
+ X.beginPath();X.moveTo(px-12,0);X.lineTo(px+12,0);X.lineTo(px+90,300);X.lineTo(px-90,300);X.fill();
+ for(const a of G){X.fillStyle='#2b1b15';X.fillRect(a[0],300,a[1]-a[0],60);X.fillStyle='#5b3a2a';X.fillRect(a[0],300,a[1]-a[0],3)}
+ for(const p of P){X.fillStyle='#3a261c';X.fillRect(p[0],p[1],p[2],8);X.fillStyle='#5b3a2a';X.fillRect(p[0],p[1],p[2],2)}
+ for(const s of SC){X.fillStyle=got.length<s[2]?'#a3283c55':'#ffffff10';X.fillRect(s[0],296,s[1]-s[0],4)}
+ FR.forEach((f,i)=>{if(got.includes(i))return;X.fillStyle='#ffd9a0';X.shadowColor='#ffb060';X.shadowBlur=14;X.beginPath();X.arc(f[0],f[1]+Math.sin(t/20+i)*4,5+Math.sin(t/15+i)*2,0,7);X.fill();X.shadowBlur=0});
+ X.font='14px Georgia';X.textAlign='center';X.fillStyle='#e8d9c0';
+ for(const n of NP){pup(n[0],300,px<n[0]?-1:1,0,5,'#4a3a42');if(Math.abs(n[0]-px)<50&&!dlg)X.fillText('✦ parler',n[0],226)}
+ X.fillStyle='#6b4a32';X.fillRect(4690,60,120,6);X.strokeStyle='#ffffff40';
+ for(let i=0;i<5;i++){X.beginPath();X.moveTo(4700+i*25,66);X.lineTo(4750,290);X.stroke()}
+ X.fillStyle='#e8d9c0';if(px>4650&&!dlg)X.fillText('✦ couper les fils',4750,226);
+ pup(px,py,face,ph,5-got.length,'#8a6a4a');X.restore();
+ X.fillStyle='#e8d9c0';X.font='14px Georgia';X.textAlign='left';X.fillText('✦ '+got.length+'/5',14,24);
+ X.textAlign='right';X.fillText(px<1600?'Acte I · La cage':px<3400?'Acte II · Le rôle':'Acte III · Les fils',W-14,24);
+ if(forced){X.textAlign='center';X.fillStyle='#d04058';X.font='italic 17px Georgia';X.fillText(forced[3],W/2,150);X.font='11px Georgia';X.fillStyle='#e8d9c0aa';X.fillText('Le rôle te pousse en avant. Il faut '+forced[2]+' souvenirs pour résister.',W/2,170)}
+ if(dlg){X.fillStyle='#000000c8';X.fillRect(30,40,W-60,80);X.strokeStyle='#a3283c';X.strokeRect(30,40,W-60,80);X.fillStyle='#e8d9c0';X.font='15px Georgia';X.textAlign='left';wrap(dlg.s.slice(0,dlg.n|0),44,66,W-90,20)}}
+function ttl(){X.fillStyle='#0b0708';X.fillRect(0,0,W,H);
+ if(img.complete&&img.naturalWidth){const h=230,w=h*img.naturalWidth/img.naturalHeight;X.drawImage(img,W/2-w/2,8,w,h)}
+ X.textAlign='center';X.fillStyle='#e8d9c0aa';X.font='12px Georgia';
+ wrap("Le libre arbitre contre le destin · le contrôle et la manipulation · l'éveil de la conscience · mémoire et identité · liberté et illusion",W/2,262,W-120,16);
+ X.globalAlpha=.6+.4*Math.sin(t/20);X.fillStyle='#d04058';X.font='16px Georgia';X.fillText('Touchez pour entrer en scène',W/2,332);X.globalAlpha=1}
+function fin(){X.fillStyle='#050303';X.fillRect(0,0,W,H);X.textAlign='center';X.fillStyle='#d04058';X.font='28px Georgia';X.fillText(end==2?'ESSENCE TROUVÉE':'RIDEAU',W/2,90);
+ X.fillStyle='#e8d9c0';X.font='16px Georgia';wrap(end==2?"Tu coupes les derniers fils. Tu n'es plus le rôle : tu es toi. Mais le théâtre n'a pas de porte… alors tu joues, pour la première fois, ta propre pièce.":"Tu t'inclines. Le rideau tombe, et la pièce recommence, identique. Il te manque des souvenirs : reviens chercher ton essence.",W/2,140,W-180,24);
+ X.font='13px Georgia';X.fillText('Touchez pour rejouer',W/2,330)}
+function draw(){const S=Math.min(C.width/W,C.height/H);
+ X.setTransform(1,0,0,1,0,0);X.fillStyle='#050303';X.fillRect(0,0,C.width,C.height);
+ X.setTransform(S,0,0,S,(C.width-W*S)/2,(C.height-H*S)/2);X.save();X.beginPath();X.rect(0,0,W,H);X.clip();
+ if(st=='title')ttl();else if(st=='end')fin();else world();X.restore()}
+(function loop(){upd();draw();requestAnimationFrame(loop)})();
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
